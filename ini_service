@@ -8,7 +8,7 @@ WorkingDirectory=/home/pi
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
-User=pi
+User=kjoachim
 Group=pi
 
 [Install]
