@@ -12,14 +12,15 @@ import numpy as np
 import sys
 import serial
 import datetime
+from datetime import datetime, timedelta
 import RPi.GPIO as GPIO
 import time
 import os
-import picamera
+import picamera # Use either picamera or picamera2 WONT WORK ON PC
 import psutil
 from __future__ import print_function
 
-GPIO.setmode(GPIO.BCM)
+GPIO.setmode(GPIO.BCM) # Add other pins
 PUMP_PIN = 17
 
 serial_port = '/dev/serial0'
@@ -28,6 +29,10 @@ camera = picamera.PiCamera()
 GPIO.setup(PUMP_PIN, GPIO.OUT)
 
 ser = serial.Serial(serial_port, baud_rate, timeout=1)
+
+start_time_first = datetime.now() # The very beggining of time counter
+photo_ctr = 0 # How many photos have been taken
+watering_ctr = 0 # How many waterings have been made
 
 # PUMP control
 def turn_pump_off():
@@ -103,13 +108,41 @@ def get_bme680_status():
 def get_pump_status():
     return 1 if GPIO.input(PUMP_PIN) == GPIO.HIGH else 0
 
-def get_camera_status():
+def take_photo():
     try:
         image_path = f"/path/to/images/image_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.jpg"
         camera.capture(image_path)
         return 1  # Successfully captured image
     except Exception:
         return 0  # Failed to capture image
+
+# Check watering time, photo time - depends on actual time
+
+def check_photo_time(start_time):
+    # Calculate the time difference of 3 hours and 25 minutes
+    time_diff = timedelta(hours=3, minutes=25)
+    
+    # Get the current time
+    current_time = datetime.now()
+
+    # Check if the difference between current time and start time is 3 hours 25 minutes or greater
+    if current_time - start_time >= time_diff:
+        return 1  # Photo time flag
+    else:
+        return 0  # Not yet time
+
+def check_watering_time(start_time):
+    # Calculate the time difference of 8 hours
+    time_diff = timedelta(hours=8)
+    
+    # Get the current time
+    current_time = datetime.now()
+    
+    # Check if the difference between current time and start time is 8 hours or greater
+    if current_time - start_time >= time_diff:
+        return 1
+    else:
+        return 0
 
 # Main loop
 try:
@@ -119,26 +152,49 @@ try:
     while True:
         # Get the current date and time
         current_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Checking photo and watering flags
+        photo_time = check_photo_time(current_time)
+        watering_time = check_watering_time(current_time)
+        
+        # Photo condition fulfilled
+        if photo_time == 1:
+            break
+        take_photo()
+        photo_ctr += 1
+        photo_time = 0
+        time.sleep(5)
+        
+        # Watering condition fulfilled
+        if watering_time == 1:
+            break
+        turn_pump_on()
+        time.sleep(500) # Improve the code so as it fits watering plan
+        turn_pump_off()
+        watering_ctr += 1
+        watering_time = 0
+        time.sleep(5)
 
         # Retrieve all statuses
         cpu_temp_status = get_cpu_temperature_status()
         co2_status = get_co2_status()
         temp_status, humidity_status, pressure_status, gas_status = get_bme680_status()
         pump_status = get_pump_status()
-        camera_status = get_camera_status()
+        camera_status = take_photo()
 
-        # Format log message (binary status for each)
+        # Format log message
         log_message = (f"{current_time}, "
                        f"CPU Temp: {cpu_temp_status}, "
                        f"CO2: {co2_status}, "
                        f"Temp: {temp_status}, Humidity: {humidity_status}, "
                        f"Pressure: {pressure_status}, Gas: {gas_status}, "
-                       f"Pump: {pump_status}, Camera: {camera_status}")
+                       f"Pump: {pump_status}, Camera: {camera_status}",
+                       f"Photo ctr: {photo_ctr}, Watering ctr: {watering_ctr}")
         
-        # Log data to file
+        # Log data to file - SAVE
         log_data(log_message)
 
-        # Print to console (optional)
+        # Print to console (optional - debug)
         print(log_message)
 
         # Wait for 5 seconds before next iteration
