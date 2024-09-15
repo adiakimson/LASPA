@@ -2,7 +2,7 @@
 
 # Variables
 SERVICE_NAME="mission.service"
-SCRIPT_PATH="/home/pi/mission.py"
+SCRIPT_PATH="/home/pi/mission.py" #python script start
 PYTHON_PATH="/usr/bin/python3"
 WORKING_DIR="/home/pi"
 USER="pi" #modify
