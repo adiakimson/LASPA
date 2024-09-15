@@ -9,7 +9,7 @@ StandardOutput=inherit
 StandardError=inherit
 Restart=always
 User=kjoachim
-Group=pi
+Group=root 
 
 [Install]
 WantedBy=multi-user.target
