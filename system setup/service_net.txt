@@ -1,0 +1,10 @@
+[Unit]
+Description=ICE Cubes Network Monitor Service with Failover
+After=network.target
+
+[Service]
+ExecStart=/path/to/ice_cubes_network_failover.sh
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
