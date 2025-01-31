@@ -6,5 +6,5 @@ Discontinued / temporarly suspended. Made public on January 9th 2025.
 MATLAB scripts were developed on R2024a for sensor data analysis and mission log analysis.  
 For GUI install GUI Layout Toolbox.  
 All of the project's data were stored in two separated SD cards independently.  
-The data could be retrieved via ESA-provided VPN.
+The data could be also retrieved via ESA-provided VPN.
 
