@@ -1,3 +1,6 @@
+# Streaming setup based on ffmpeg
+# Tested using Docker with nginx configured for rtmp
+
 from picamera2 import Picamera2, Preview # Only works on RPi
 import ffmpeg
 import subprocess
